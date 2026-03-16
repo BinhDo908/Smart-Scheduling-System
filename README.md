@@ -1,4 +1,4 @@
-# Smart Teacher Scheduling System (VJU Edition)
+# VJU Smart Teacher Scheduling System
 
 Hệ thống xếp thời khóa biểu thông minh cho môi trường đa ngành và đa cơ sở.
 
