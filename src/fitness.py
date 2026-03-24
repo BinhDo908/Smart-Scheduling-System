@@ -48,7 +48,7 @@ def calculate_fitness(schedule):
         my_periods = get_occupied_periods(assignment)
         for _, period in my_periods:
             if str(period) in disliked_slots:
-                penalty += 50 # Phạt nặng nếu rơi vào giờ GV không thích
+                penalty += 50 
 
     # --- TIÊU CHÍ 3: DI CHUYỂN CAMPUS ---
     for t_name, days in teacher_day_schedule.items():
