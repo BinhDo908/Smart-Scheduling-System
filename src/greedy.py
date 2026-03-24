@@ -23,7 +23,6 @@ def greedy_schedule(courses, teachers, rooms, timeslots, max_attempts=5000):
         valid_assignment = False
         attempts = 0
 
-        # 2.1 AUTO-STAFFING: Lọc giảng viên đủ chuyên môn và đúng ngành
         course_major = str(course.get('major', ''))
         course_subject = str(course.get('subject', ''))
         
@@ -41,10 +40,8 @@ def greedy_schedule(courses, teachers, rooms, timeslots, max_attempts=5000):
         need_lab = course.get('need_lab', False)
 
         if need_lab:
-            # Ưu tiên tìm phòng Lab ở Hòa Lạc trước
             eligible_rooms = [r for r in rooms if r['is_lab'] and r['campus'] in [1, 2, 3]]
         else:
-            # Môn lý thuyết thì phân loại theo năm học
             if cohort == 'Y1':
                 eligible_rooms = [r for r in rooms if r['campus'] in [1, 2, 3] and not r['is_lab']]
             else:
@@ -63,7 +60,6 @@ def greedy_schedule(courses, teachers, rooms, timeslots, max_attempts=5000):
                 'timeslot': timeslot
             }
 
-            # Kiểm tra tất cả các ràng buộc cứng (trong đó có check Campus và Overload)
             if is_hard_feasible(assignment, schedule):
                 schedule.append(assignment)
                 valid_assignment = True
