@@ -8,17 +8,10 @@ from greedy import greedy_schedule
 from hill_climbing import hill_climbing_schedule
 from fitness import calculate_fitness
 
-# ==========================================
-# HÀM CHẠY ĐỘC LẬP CHO TỪNG LUỒNG (WORKER)
-# ==========================================
+
 def run_optimization_pipeline(args):
-    """
-    Hàm này sẽ được chạy song song trên nhiều nhân CPU.
-    Mỗi luồng sẽ tự chạy Greedy -> Hill Climbing -> Tính điểm Fitness.
-    """
     run_id, courses, teachers, rooms, timeslots = args
     
-    # Đặt seed ngẫu nhiên khác biệt cho mỗi luồng để đảm bảo chúng đi tìm các kết quả khác nhau
     random.seed(time.time() + run_id)
     
     print(f"[Luồng {run_id}] Bắt đầu xếp lịch...")
@@ -36,9 +29,6 @@ def run_optimization_pipeline(args):
     
     return score, optimized_schedule
 
-# ==========================================
-# HÀM MAIN
-# ==========================================
 def main():
     current_dir = os.getcwd()
     base_dir = os.path.join(current_dir, 'data')
@@ -52,12 +42,9 @@ def main():
         print(f"[-] Lỗi đọc dữ liệu: Không tìm thấy file tại {e.filename}")
         return
 
-    # --- CẤU HÌNH PARALLEL COMPUTING ---
     NUM_RUNS = 10 #or 5
-    print(f"\n[*] KHỞI CHẠY HỆ THỐNG TÍNH TOÁN SONG SONG ({NUM_RUNS} LUỒNG)...")
     start_total = time.time()
     
-    # Chuẩn bị gói dữ liệu để gửi cho các CPU Core
     args_list = [(i, courses, teachers, rooms, timeslots) for i in range(1, NUM_RUNS + 1)]
     
     best_schedule = []
@@ -66,7 +53,6 @@ def main():
     with concurrent.futures.ProcessPoolExecutor(max_workers=NUM_RUNS) as executor:
         results = executor.map(run_optimization_pipeline, args_list)
         
-        # Nhận kết quả từ các luồng và tìm ra Lịch trình xuất sắc nhất
         for score, schedule in results:
             if score < best_score and schedule:
                 best_score = score
@@ -83,7 +69,6 @@ def main():
     print(f"[+] Tổng thời gian chạy đa luồng: {end_total - start_total:.2f} giây")
     print("="*60)
 
-    # --- XỬ LÝ LỊCH TỐT NHẤT VÀ XUẤT FILE ---
     schedule_sorted = sorted(
         best_schedule,
         key=lambda x: (int(x['timeslot'].get('day')), int(x['timeslot'].get('period')))
@@ -206,19 +191,16 @@ def generate_analytical_report(schedule):
 
     # --- IN KẾT QUẢ ---
     
-    # Hiệu suất sử dụng phòng (Giả định 1 tuần có 5 ngày, mỗi ngày 10 tiết = 50 tiết/phòng)
     print(f"\n[1] HIỆU SUẤT SỬ DỤNG PHÒNG (Room Utilization):")
     lab_rooms = [r for r in room_usage.keys() if "C2" in r or "C3" in r] # Nhận diện nhanh Lab qua mã phòng
     for r, hours in sorted(room_usage.items(), key=lambda x: x[1], reverse=True)[:5]:
         util_rate = (hours / 50) * 100
         print(f" > Phòng {r:<8}: {hours:>2}/50 tiết ({util_rate:.1f}%)")
 
-    # Top giảng viên dạy nhiều nhất
     print(f"\n[2] TOP 5 GIẢNG VIÊN CÓ KHỐI LƯỢNG CAO NHẤT:")
     for name, hours in sorted(teacher_loads.items(), key=lambda x: x[1], reverse=True)[:5]:
         print(f" > Giảng viên {name:<18}: {hours:>2} tiết/tuần")
 
-    # Chỉ số chất lượng (Quality Metrics)
     avg_waste = total_waste / len(schedule)
     print(f"\n[3] CHỈ SỐ CHẤT LƯỢNG LỊCH TRÌNH:")
     print(f" > Tổng số tiết vi phạm giờ ghét của GV: {disliked_violation_count}")

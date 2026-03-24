@@ -4,10 +4,6 @@ from constraints import is_hard_feasible, violates_hard_constraints
 
 
 def calculate_cost(schedule):
-    """
-    Cost = tổng số vi phạm ràng buộc cứng trong toàn bộ schedule.
-    Mỗi cờ vi phạm (room_conflict, teacher_conflict, ...) được tính là 1 đơn vị.
-    """
     cost = 0
     for assignment in schedule:
         violations = violates_hard_constraints(assignment, schedule)
@@ -38,7 +34,6 @@ def hill_climbing_schedule(initial_schedule, rooms, timeslots,
     for _ in range(max_iterations):
         improved = False
 
-        # Thử một số láng giềng ngẫu nhiên
         for _ in range(max_neighbors):
             neighbor_schedule = copy.deepcopy(current_schedule)
 
@@ -60,14 +55,11 @@ def hill_climbing_schedule(initial_schedule, rooms, timeslots,
 
             neighbor_schedule[idx] = new_assignment
 
-            # 1) Kiểm tra ràng buộc cứng cho assignment này
             if not is_hard_feasible(new_assignment, neighbor_schedule):
                 continue
 
-            # 2) Tính cost cho toàn bộ lịch
             new_cost = calculate_cost(neighbor_schedule)
 
-            # 3) Chỉ chấp nhận nếu tốt hơn (ít vi phạm hơn)
             if new_cost < current_cost:
                 current_schedule = neighbor_schedule
                 current_cost = new_cost
