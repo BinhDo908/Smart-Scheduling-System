@@ -7,6 +7,7 @@ import concurrent.futures
 from greedy import greedy_schedule
 from hill_climbing import hill_climbing_schedule
 from fitness import calculate_fitness
+from excel_export import export_schedule_to_excel
 
 
 def run_optimization_pipeline(args):
@@ -42,7 +43,7 @@ def main():
         print(f"[-] Lỗi đọc dữ liệu: Không tìm thấy file tại {e.filename}")
         return
 
-    NUM_RUNS = 10 #or 5
+    NUM_RUNS = 60 #or 5
     start_total = time.time()
     
     args_list = [(i, courses, teachers, rooms, timeslots) for i in range(1, NUM_RUNS + 1)]
@@ -74,39 +75,10 @@ def main():
         key=lambda x: (int(x['timeslot'].get('day')), int(x['timeslot'].get('period')))
     )
 
-    export_path = os.path.join(current_dir, 'final_schedule.csv')
-    export_schedule_to_csv(schedule_sorted, export_path)
+    export_path = os.path.join(current_dir, 'final_schedule.xlsx')
+    export_schedule_to_excel(schedule_sorted, export_path)
     generate_analytical_report(schedule_sorted)
     interactive_search(schedule_sorted)
-
-def export_schedule_to_csv(schedule_sorted, filepath):
-    schedule_data = []
-    for assignment in schedule_sorted:
-        ts = assignment['timeslot']
-        start_p = int(ts.get('period'))
-        duration = int(assignment['course'].get('duration', 1))
-        end_p = start_p + duration - 1
-        period_str = f"{start_p}-{end_p}" if duration > 1 else f"{start_p}"
-
-        schedule_data.append({
-            "Course ID": assignment['course']['name'],       # Mã môn (VD: BCSE101)
-            "Subject": assignment['course'].get('subject', ''), # Tên môn học (VD: Programming)
-            "Cohort": assignment['course'].get('cohort', ''),   # Năm học (VD: Y1)
-            "Type": assignment['course'].get('type', ''),
-            "Major": assignment['course'].get('major', ''),
-            "Teacher": assignment['teacher']['name'],
-            "Room": assignment['room']['name'],
-            "TimeSlot": f"Day {ts.get('day')} Period {period_str}",
-        })
-
-    schedule_df = pd.DataFrame(schedule_data)
-    
-    try:
-        schedule_df.to_csv(filepath, index=False)
-        print(f"\n[+] Đã xuất file lịch trình thành công tại: {filepath}")
-        print(f"Tổng số môn học đã xếp: {len(schedule_sorted)}")
-    except PermissionError:
-        print(f"\n[-] LỖI LƯU FILE: Không thể ghi đè lên file '{filepath}' do đang mở ở phần mềm khác.")
 
 
 def interactive_search(schedule):
@@ -114,8 +86,8 @@ def interactive_search(schedule):
         print("\n" + "="*50)
         print("   HỆ THỐNG TRA CỨU THỜI KHÓA BIỂU THÔNG MINH")
         print("="*50)
-        print("1. Tìm kiếm theo Cơ sở (Campus - VD: C1, C2)")
-        print("2. Tìm kiếm theo Môn học/Ngành học (VD: BCSE, Core)")
+        print("1. Tìm kiếm theo Cơ sở")
+        print("2. Tìm kiếm theo Môn học/Ngành học")
         print("3. Tìm kiếm theo Giảng viên")
         print("4. Lọc theo Phòng học")
         print("5. Xem lịch theo Ngày")
@@ -206,7 +178,6 @@ def generate_analytical_report(schedule):
     print(f" > Tổng số tiết vi phạm giờ ghét của GV: {disliked_violation_count}")
     print(f" > Trung bình ghế trống mỗi ca học    : {avg_waste:.1f} ghế")
     
-    # Đánh giá tổng quát
     status = "Rất Tốt" if disliked_violation_count < 5 else "Khá"
     print(f"\n=> ĐÁNH GIÁ CHUNG: Hệ thống hoạt động {status}!")
     print("="*78)
